@@ -28,6 +28,7 @@ import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
 import com.dropbox.client2.android.AndroidAuthSession;
+import android.content.SharedPreferences.Editor;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -78,7 +79,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
 
-        AndroidAuthSession session = dropboxApi.getSession();
-        if(session.authenticationSuccessful())
+        AndroidAuthSession session = (AndroidAuthSession)dropboxApi.getSession();
+        if(session.authenticationSuccessful()){
+            try {
+                session.finishAuthentication();
+
+                TokenPair tokens =session.getAccessTokenPair();
+                SharedPreferences prefs = getSharedPreferences(DROPBOX_NAME, 0);
+                Editor editor
+            } catch (IllegalStateException e) {
+                Toast.makeText(this, "Error during Dropbox auth", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }
