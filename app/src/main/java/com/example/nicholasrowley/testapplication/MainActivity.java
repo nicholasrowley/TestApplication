@@ -1,6 +1,12 @@
 package com.example.nicholasrowley.testapplication;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.PixelFormat;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,78 +16,69 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
-public class MainActivity extends AppCompatActivity {
+import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.android.AndroidAuthSession;
+import com.dropbox.client2.session.AccessTokenPair;
+import com.dropbox.client2.session.AppKeyPair;
+import com.dropbox.client2.session.Session.AccessType;
+import com.dropbox.client2.android.AndroidAuthSession;
 
-    private WebView myWebview;
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    @Override
+    private LinearLayout container;
+    private DropboxAPI dropboxApi;
+    private boolean isUserLoggedIn;
+    private Button loginBtn;
+    private Button uploadFileBtn;
+    private Button listFileBtn;
+
+    private final static String DROPBOX_FILE_DIR = "/DropboxDemo/";
+    private final static String DROPBOX_NAME = "dropbox_prefs";
+    private final static String ACCESS_KEY = "skgr4u9wd8t0mwf";
+    private final static String ACCESS_SECRET = "qr9z6y648czvexp";
+    private final static AccessType ACCESS_TYPE = AccessType.DROPBOX;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //second implementation
 
-        myWebview = (WebView) findViewById(R.id.webView);
-        myWebview.setWebViewClient(new CustomWebViewClient());
+        loginBtn = (Button) findViewById(R.id.dbConnect);
+        loginBtn.setOnClickListener(this);
+        uploadFileBtn = (Button) findViewById(R.id.dbUploadFileBtn);
+        uploadFileBtn.setOnClickListener(this);
+        listFileBtn = (Button) findViewById(R.id.dbListFilesBtn);
+        listFileBtn.setOnClickListener(this);
 
-        myWebview.getSettings().setLoadsImagesAutomatically(true);
-        myWebview.getSettings().setJavaScriptEnabled(true);
-        myWebview.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-        myWebview.loadUrl("https://player.vimeo.com/video/179155110?player_id=player&title=0&byline=0&portrait=0&autoplay=1&api=1");
+        loggedIn(false);
 
+        AppKeyPair appKeyPair = new AppKeyPair(ACCESS_KEY, ACCESS_SECRET);
+        AndroidAuthSession session;
 
-        /*myWebview  = new WebView(this);
+        SharedPreferences prefs = getSharedPreferences(DROPBOX_NAME, 0);
+        String key = prefs.getString(ACCESS_KEY, null);
+        String secret = prefs.getString(ACCESS_SECRET, null);
 
-        myWebview.getSettings().setJavaScriptEnabled(true); // enable javascript
-
-        final Activity activity = this;
-
-        myWebview.setWebViewClient(new CustomWebViewClient() {
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                Toast.makeText(activity, description, Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        if (savedInstanceState == null)
-        {
-            myWebview.loadUrl("https://player.vimeo.com/video/179155110?player_id=player&title=0&byline=0&portrait=0&autoplay=1&api=1");
+        if(key != null && secret != null) {
+            AccessTokenPair token = new AccessTokenPair(key, secret);
+            session = new AndroidAuthSession(appKeyPair, ACCESS_TYPE, token);
+        } else {
+            session = new AndroidAuthSession(appKeyPair, ACCESS_TYPE);
         }
-        setContentView(myWebview);*/
-    }
 
-    public void onClickButtonTest( View v )
-    {
-        /*
-        myWebview.getSettings().setJavaScriptEnabled(true); // enable javascript
-
-        myWebview.loadUrl("https://player.vimeo.com/video/179155110?player_id=player&title=0&byline=0&portrait=0&autoplay=1&api=1");
-        */
-        /*TextView myTextView = (TextView) findViewById(R.id.textView2);
-        myTextView.setText("Clicked!");*/
-
-        switch (v.getId()) {
-            case R.id.buttonTest:
-                myWebview.setLayoutParams(new LinearLayout.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT));
-                break;
-        }
+        dropboxApi = new DropboxAPI(session);
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState )
-    {
-        super.onSaveInstanceState(outState);
-        myWebview.saveState(outState);
+    protected void onResume() {
+        super.onResume();
+
+        AndroidAuthSession session = dropboxApi.getSession();
+        if(session.authenticationSuccessful())
     }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState)
-    {
-        super.onRestoreInstanceState(savedInstanceState);
-        myWebview.restoreState(savedInstanceState);
-    }
-
-
 }
